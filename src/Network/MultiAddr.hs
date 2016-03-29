@@ -124,7 +124,7 @@ parseAddress _    = \_ -> Nothing
 
 -- | Parse a 'String' to its corresponding 'MultiAddr'
 --
--- If invalid input returns 'Nothing'
+-- If the input is invalid, returns 'Nothing'
 fromString :: String -> Maybe MultiAddr
 fromString ('/':cs) = sequence . fromString' . filter (/= "") . splitOn "/" $ cs
     where
@@ -214,7 +214,7 @@ fromBytes = getProtocol >>= \case
 
 -- | Tries to decode from a strict 'ByteString' to a 'MultiAddr'
 --
--- If invalid input, returns 'Nothing'
+-- If the input is invalid, returns 'Nothing'
 decode :: ByteString -> Maybe MultiAddr
 decode bytes = case runGetS fromBytes bytes of
     (Left  _) -> Nothing
