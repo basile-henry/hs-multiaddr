@@ -1,11 +1,10 @@
 module Main(main) where
 
-import           Data.Maybe            (fromJust)
+import           Data.ByteString   (pack, unpack)
 import           Network.MultiAddr
-import           Test.HUnit            (Assertion, (@?=))
-import           Test.Tasty            (TestTree, defaultMain, testGroup,
-                                        testGroup)
-import           Test.Tasty.HUnit      (testCase)
+import           Test.HUnit        (Assertion, (@?=))
+import           Test.Tasty        (defaultMain, testGroup)
+import           Test.Tasty.HUnit  (testCase)
 main :: IO ()
 main = defaultMain $ testGroup "Tests" [
         testCase  "testCase01" testCase01,
@@ -13,39 +12,33 @@ main = defaultMain $ testGroup "Tests" [
         testCase  "testCase03" testCase03,
         testCase  "testCase04" testCase04,
         testCase  "testCase05" testCase05,
-        testCase  "testCase06" testCase06,
-        testCase  "testCase07" testCase07,
-        testCase  "testCase08" testCase08,
-        testCase  "testCase09" testCase09,
-        testCase  "testCase10" testCase10
+        testCase  "testCase06" testCase06
     ]
 
 testCase01 :: Assertion
-testCase01 = undefined
+testCase01 =
+    fromString "ip4/127.0.0.1/tcp/1234" @?= Nothing
 
 testCase02 :: Assertion
-testCase02 = undefined
+testCase02 =
+    fromString "/////ip6//::1/////tcp///////1234////" @?= fromString "/ip6/::1/tcp/1234"
 
 testCase03 :: Assertion
-testCase03 = undefined
+testCase03 =
+    (decode =<< encode <$> fromString "/ip4/127.0.0.1/tcp/4001/ipfs/Qmd7aqZhb93HVZ5S4tyyF84dTbpN6SmgfdNPYgFB8wUyo8")
+    @?= Just [(IP4, pack [127,0,0,1]),(TCP, pack [15,161]),(IPFS, pack [34,18,32,219,134,96,62,152,31,254,221,182,235,36,19,208,199,247,51,10,254,150,69,194,12,196,254,184,205,0,66,90,25,131,203])]
 
 testCase04 :: Assertion
-testCase04 = undefined
+testCase04 = 
+    (unpack . encode <$> fromString "/ip4/127.0.0.1/tcp/4001/ipfs/Qmd7aqZhb93HVZ5S4tyyF84dTbpN6SmgfdNPYgFB8wUyo8")
+    @?= Just [4,127,0,0,1,6,15,161,165,3,35,34,18,32,219,134,96,62,152,31,254,221,182,235,36,19,208,199,247,51,10,254,150,69,194,12,196,254,184,205,0,66,90,25,131,203]
 
 testCase05 :: Assertion
-testCase05 = undefined
+testCase05 =
+    (findAddressString IPFS =<< fromString "/ip4/127.0.0.1/tcp/4001/ipfs/Qmd7aqZhb93HVZ5S4tyyF84dTbpN6SmgfdNPYgFB8wUyo8")
+    @?= Just "Qmd7aqZhb93HVZ5S4tyyF84dTbpN6SmgfdNPYgFB8wUyo8"
 
 testCase06 :: Assertion
-testCase06 = undefined
-
-testCase07 :: Assertion
-testCase07 = undefined
-
-testCase08 :: Assertion
-testCase08 = undefined
-
-testCase09 :: Assertion
-testCase09 = undefined
-
-testCase10 :: Assertion
-testCase10 = undefined
+testCase06 =
+    (findAddress IPFS =<< fromString "/ip4/127.0.0.1/tcp/4001/ipfs/Qmd7aqZhb93HVZ5S4tyyF84dTbpN6SmgfdNPYgFB8wUyo8")
+    @?= (Just $ pack [34,18,32,219,134,96,62,152,31,254,221,182,235,36,19,208,199,247,51,10,254,150,69,194,12,196,254,184,205,0,66,90,25,131,203])
