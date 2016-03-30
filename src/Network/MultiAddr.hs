@@ -8,7 +8,7 @@ License     : MIT
 Maintainer  : basile.henry@hotmail.com
 Stability   : experimental
 
-Network.MultiAddr is the implemenation multiaddr, the network address format described by jbenet <https://github.com/jbenet/multiaddr>
+Network.MultiAddr is the implementation of multiaddr, the network address format described by jbenet <https://github.com/jbenet/multiaddr>
 
 multiaddr is a standard way to represent addresses that:
 
@@ -71,8 +71,8 @@ import           Data.ByteString.Base58 (bitcoinAlphabet, decodeBase58,
 import qualified Data.ByteString.UTF8   as UTF8
 import           Data.Char              (toLower)
 import           Data.IP                (fromIPv4, fromIPv6b, toIPv4, toIPv6b)
-import           Data.List              (find)
-import           Data.List.Split        (splitOn)
+import           Data.List              (find, elemIndex)
+-- import           Data.List.Split        (splitOn)
 import           Data.Serialize.Get     (Get)
 import           Data.Word              (Word16)
 import           Prelude                hiding (concat, length)
@@ -126,7 +126,7 @@ parseAddress _    = \_ -> Nothing
 --
 -- If the input is invalid, returns 'Nothing'
 fromString :: String -> Maybe MultiAddr
-fromString ('/':cs) = sequence . fromString' . filter (/= "") . splitOn "/" $ cs
+fromString ('/':cs) = sequence . fromString' . filter (/= "") . split '/' $ cs
     where
         fromString' :: [String] -> [Maybe (Protocol, ByteString)]
         fromString' []     = []
@@ -295,3 +295,8 @@ findAddress proto = (snd <$>) . find ((== proto) . fst)
 -- | Get the address corresponding to the first occurence of a 'Protocol' in a 'MultiAddr' as a 'String'
 findAddressString :: Protocol -> MultiAddr -> Maybe String
 findAddressString proto = (showAddress proto . snd <$>) . find ((== proto) . fst)
+
+split :: Eq a => a -> [a] -> [[a]]
+split x ys = case elemIndex x ys of
+    (Just i) -> (take i ys) : (split x $ drop (i+1) ys)
+    Nothing  -> [ys]
