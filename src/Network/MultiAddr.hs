@@ -8,9 +8,9 @@ License     : MIT
 Maintainer  : basile.henry@hotmail.com
 Stability   : experimental
 
-MultiAddr is the implemenation of the network address format described by jbenet <https://github.com/jbenet/multiaddr>
+Network.MultiAddr is the implemenation multiaddr, the network address format described by jbenet <https://github.com/jbenet/multiaddr>
 
-MultiAddr is a standard way to represent addresses that:
+multiaddr is a standard way to represent addresses that:
 
     * support any standard network protocols
     * self-describe (include protocols)
@@ -18,7 +18,7 @@ MultiAddr is a standard way to represent addresses that:
     * have a nice string representation
     * encapsulate well
 
-For example, to get a MultiAddr from a string:
+For example, to get a 'MultiAddr' from a 'String':
 
 @
 let multiaddr = fromJust $ fromString "\/ip4\/127.0.0.1\/tcp\/4001\/ipfs\/Qmd7aqZhb93HVZ5S4tyyF84dTbpN6SmgfdNPYgFB8wUyo8"
@@ -119,7 +119,7 @@ parseAddress UDP  = (fromPort <$>) . readMaybe
 parseAddress DCCP = (fromPort <$>) . readMaybe
 parseAddress IP6  = (pack . map fromIntegral . fromIPv6b <$>) . readMaybe
 parseAddress SCTP = (fromPort <$>) . readMaybe
-parseAddress IPFS = (putVarAddrBytes <$>) . decodeBase58 bitcoinAlphabet . UTF8.fromString
+parseAddress IPFS = decodeBase58 bitcoinAlphabet . UTF8.fromString
 parseAddress _    = \_ -> Nothing
 
 -- | Parse a 'String' to its corresponding 'MultiAddr'
@@ -139,16 +139,14 @@ fromString ('/':cs) = sequence . fromString' . filter (/= "") . splitOn "/" $ cs
 fromString _        = Nothing
 
 showAddress :: Protocol -> Address -> String
-showAddress IP4  addr = show . toIPv4 . map fromIntegral . unpack $ addr
-showAddress TCP  addr = show . toPort $ addr
-showAddress UDP  addr = show . toPort $ addr
-showAddress DCCP addr = show . toPort $ addr
-showAddress IP6  addr = show . toIPv6b . map fromIntegral . unpack $ addr
-showAddress SCTP addr = show . toPort $ addr
-showAddress IPFS addr = case runGetS getVarAddrBytes addr of
-    (Left  x) -> error x
-    (Right x) -> UTF8.toString $ encodeBase58 bitcoinAlphabet x
-showAddress _    _    = ""
+showAddress IP4  = show . toIPv4 . map fromIntegral . unpack
+showAddress TCP  = show . toPort
+showAddress UDP  = show . toPort
+showAddress DCCP = show . toPort
+showAddress IP6  = show . toIPv6b . map fromIntegral . unpack
+showAddress SCTP = show . toPort
+showAddress IPFS = UTF8.toString . encodeBase58 bitcoinAlphabet
+showAddress _    = \_ -> ""
 
 -- | Given a valid 'MultiAddr', show its 'String' representation
 toString :: MultiAddr -> String
@@ -220,7 +218,7 @@ decode bytes = case runGetS fromBytes bytes of
     (Left  _) -> Nothing
     (Right x) -> x
 
--- | To get the name of a 'Protocol' as a 'Name'
+-- | Get the name of a 'Protocol' as a 'Name'
 getName :: Protocol -> Name
 getName = map toLower . show
 
@@ -240,7 +238,7 @@ getCode HTTPS      = 443
 getCode WebSockets = 477
 -- getCode Onion      = 444
 
--- | To get the 'Size' of a 'Protocol'
+-- | Get the 'Size' of a 'Protocol'
 getSize :: Protocol -> Size
 getSize IP4        = Size 32
 getSize TCP        = Size 16
