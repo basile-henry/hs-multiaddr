@@ -29,7 +29,7 @@ The network protocols currently supported by this implementation are:
 
 ## Documentation
 
-Check out the [documentation](https://ipfs.io/ipfs/QmYjXSLX7HCgV4wxEFLnaEWGSupef98GyPYRcRE2azA8jT/Network-MultiAddr.html)!
+Check out the [documentation](https://ipfs.io/ipfs/QmS5mVUz32zrSYTSwHTDFn3RjmLQKWBDRp9Pp5VS1TyVtk/Network-MultiAddr.html)!
 
 ## License
 
