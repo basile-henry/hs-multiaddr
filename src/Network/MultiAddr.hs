@@ -1,4 +1,5 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE LambdaCase    #-}
 
 {-|
 Module      : Network.MultiAddr
@@ -38,19 +39,20 @@ let address = fromJust $ findAddressString IP4 multiaddr
 
 -}
 module Network.MultiAddr (
-    MultiAddr,
+    MultiAddr (..),
     Address,
     Protocol (..),
     Name,
     Code,
     Size (..),
-    -- | = As a string
+    -- * As a string
+    show,
+    read,
     fromString,
-    toString,
-    -- | = As a binary packed format
+    -- * As a binary packed format
     encode,
     decode,
-    -- | = Utils
+    -- * Utils
     getName,
     getCode,
     getSize,
@@ -71,14 +73,23 @@ import           Data.ByteString.Base58 (bitcoinAlphabet, decodeBase58,
 import qualified Data.ByteString.UTF8   as UTF8
 import           Data.Char              (toLower)
 import           Data.IP                (fromIPv4, fromIPv6b, toIPv4, toIPv6b)
-import           Data.List              (find, elemIndex)
--- import           Data.List.Split        (splitOn)
+import           Data.List              (elemIndex, find)
 import           Data.Serialize.Get     (Get)
 import           Data.Word              (Word16)
+import           GHC.Generics           (Generic)
 import           Prelude                hiding (concat, length)
 
 -- | A self describing network address
-type MultiAddr = [(Protocol, Address)]
+newtype MultiAddr = MultiAddr [(Protocol, Address)] deriving (Eq, Generic)
+
+instance Show MultiAddr where
+    show (MultiAddr m) = concatMap toString m
+
+instance Read MultiAddr where
+    readsPrec _ = (\case
+        (Nothing) -> []
+        (Just m)  -> [(m, "")])
+        . fromString
 
 -- | A network protocol
 data Protocol  = IP4
@@ -122,11 +133,9 @@ parseAddress SCTP = (fromPort <$>) . readMaybe
 parseAddress IPFS = decodeBase58 bitcoinAlphabet . UTF8.fromString
 parseAddress _    = \_ -> Nothing
 
--- | Parse a 'String' to its corresponding 'MultiAddr'
---
--- If the input is invalid, returns 'Nothing'
+-- | fromString is the same as 'read' but presented as a 'Maybe' instead of failing on wrong input
 fromString :: String -> Maybe MultiAddr
-fromString ('/':cs) = sequence . fromString' . filter (/= "") . split '/' $ cs
+fromString ('/':cs) = (MultiAddr <$>) . sequence . fromString' . filter (/= "") . split '/' $ cs
     where
         fromString' :: [String] -> [Maybe (Protocol, ByteString)]
         fromString' []     = []
@@ -148,14 +157,10 @@ showAddress SCTP = show . toPort
 showAddress IPFS = UTF8.toString . encodeBase58 bitcoinAlphabet
 showAddress _    = \_ -> ""
 
--- | Given a valid 'MultiAddr', show its 'String' representation
-toString :: MultiAddr -> String
-toString = concatMap toString'
-    where
-        toString' :: (Protocol, ByteString) -> String
-        toString' (p, a)
-            | getSize p == Size 0 = '/' : getName p
-            | otherwise           = '/' : getName p ++ '/' : showAddress p a
+toString :: (Protocol, ByteString) -> String
+toString (p, a)
+    | getSize p == Size 0 = '/' : getName p
+    | otherwise           = '/' : getName p ++ '/' : showAddress p a
 
 fromPort :: Word16 -> ByteString
 fromPort = runPutS . serialize
@@ -183,7 +188,7 @@ toBytes (p, a) = append protoBytes addrBytes
 
 -- | Given a valid 'MultiAddr', it will be encoded to the corresponding strict 'ByteString'
 encode :: MultiAddr -> ByteString
-encode = concat . map toBytes
+encode (MultiAddr m) = concat . map toBytes $ m
 
 putVar :: VarInt Int -> ByteString
 putVar = runPutS . serialize
@@ -207,8 +212,8 @@ fromBytes = getProtocol >>= \case
         (Just p) -> do
             a <- addressBytes $ getSize p
             isEmpty >>= \case
-                True -> return $ Just [(p, a)]
-                _    -> (((p, a) :) <$>) <$> fromBytes
+                True -> return . Just . MultiAddr $ [(p, a)]
+                _    -> ((\(MultiAddr m) -> MultiAddr $ (p, a) : m) <$>) <$> fromBytes
 
 -- | Tries to decode from a strict 'ByteString' to a 'MultiAddr'
 --
@@ -290,11 +295,11 @@ fromCode _   = Nothing
 
 -- | Get the address corresponding to the first occurence of a 'Protocol' in a 'MultiAddr'
 findAddress :: Protocol -> MultiAddr -> Maybe ByteString
-findAddress proto = (snd <$>) . find ((== proto) . fst)
+findAddress proto (MultiAddr m) = (snd <$>) . find ((== proto) . fst) $ m
 
 -- | Get the address corresponding to the first occurence of a 'Protocol' in a 'MultiAddr' as a 'String'
 findAddressString :: Protocol -> MultiAddr -> Maybe String
-findAddressString proto = (showAddress proto . snd <$>) . find ((== proto) . fst)
+findAddressString proto (MultiAddr m) = (showAddress proto . snd <$>) . find ((== proto) . fst) $ m
 
 split :: Eq a => a -> [a] -> [[a]]
 split x ys = case elemIndex x ys of

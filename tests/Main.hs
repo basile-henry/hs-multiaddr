@@ -26,7 +26,7 @@ testCase02 =
 testCase03 :: Assertion
 testCase03 =
     (decode =<< encode <$> fromString "/ip4/127.0.0.1/tcp/4001/ipfs/Qmd7aqZhb93HVZ5S4tyyF84dTbpN6SmgfdNPYgFB8wUyo8")
-    @?= Just [(IP4, pack [127,0,0,1]),(TCP, pack [15,161]),(IPFS, pack [18,32,219,134,96,62,152,31,254,221,182,235,36,19,208,199,247,51,10,254,150,69,194,12,196,254,184,205,0,66,90,25,131,203])]
+    @?= (Just $ MultiAddr [(IP4, pack [127,0,0,1]),(TCP, pack [15,161]),(IPFS, pack [18,32,219,134,96,62,152,31,254,221,182,235,36,19,208,199,247,51,10,254,150,69,194,12,196,254,184,205,0,66,90,25,131,203])])
 
 testCase04 :: Assertion
 testCase04 = 
