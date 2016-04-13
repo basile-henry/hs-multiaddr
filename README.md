@@ -29,10 +29,10 @@ The network protocols currently supported by this implementation are:
 
 ## Documentation
 
-Check out the [documentation](https://ipfs.io/ipfs/QmYvhraYnYGqf77Ti8KWCPuiXmTeSR7APhsSovnmHUucSd/Network-MultiAddr.html)!
+Check out the [documentation](https://ipfs.io/ipfs/QmY1W3wWn6k3Tm6hdfAMghbzikt1rCkwVQ7tnjpN3UgfCL/Network-Multiaddr.html)!
 
 ## License
 
-[MIT License](LICENSE)
+[MIT](LICENSE)
 
 Copyright (c) 2016 Basile Henry
